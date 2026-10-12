@@ -1,6 +1,6 @@
 # StepUp - A Step Goal Early-Warning Predictor
 
-Predicts whether you'll reach 10,000 steps today, using only the **time of day** and your **steps so far**. If you're likely to fall short, the demo suggests short walks spread over the rest of the day to give you the best chance of reaching the goal.
+Predicts whether you'll reach 10,000 steps today, using only the **time of day** and your **steps so far**. If you're likely to fall short, the demo shows how much extra walking would raise your chance (as one longer walk or several shorter ones) and where to be an hour from now to stay on pace.
 
 Data science capstone project. The model and write-up are in the notebooks, and the demo is a small Flask API plus a single-page frontend.
 
@@ -52,7 +52,7 @@ ROC AUC: Random Forest 0.775, Logistic Regression 0.743. The Random Forest is us
    python app.py
    ```
    It runs at `http://127.0.0.1:5000`.
-3. Open `index.html` in a browser. Set the time and your steps so far, or drag the dot on the chart.
+3. Open `index.html` in a browser. Set the time and your steps so far, or drag the dot on the chart. Set the time you stop walking to limit the advice, and use the toggles to hide the pace chart or switch to dark mode.
 
 The `models/` folder must exist. If it doesn't, run `02_modeling.ipynb` down to Section 9 to create it. Load the model with the same scikit-learn version that trained it.
 
@@ -64,10 +64,11 @@ Install `jupyter matplotlib seaborn` as well. Download the two raw files listed 
 
 - `POST /predict` with `{"minute_of_day": 840, "steps_so_far": 4000}` returns `probability`, `will_reach`, `steps_remaining` and `in_trained_range`.
 - `GET /curve` returns the typical-day progress curve used by the chart.
+- The page calls `/predict` several times per update, with hypothetical extra steps, to work out how much walking would raise the chance.
 
 ## Limitations
 
-Small, self-selected dataset (30 users, 2016). The same users appear in train and test, so scores may be optimistic for a new user. Only two features are used, and early-morning predictions are close to guessing. The goal is fixed at 10,000 steps, and the walk plan assumes about 100 steps a minute. Details are in the notebook.
+Small, self-selected dataset (30 users, 2016). The same users appear in train and test, so scores may be optimistic for a new user. Only two features are used, and early-morning predictions are close to guessing. The goal is fixed at 10,000 steps, and the advice assumes about 100 steps a minute and doesn’t know your timetable. Details are in the notebook.
 
 ## AI assistance
 
