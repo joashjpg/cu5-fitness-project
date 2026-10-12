@@ -1,4 +1,4 @@
-# Step Goal Early-Warning Predictor ("The halfway problem")
+# StepUp - A Step Goal Early-Warning Predictor
 
 Predicts whether you'll reach 10,000 steps today, using only the **time of day** and your **steps so far**. If you're likely to fall short, the demo suggests short walks spread over the rest of the day to give you the best chance of reaching the goal.
 
