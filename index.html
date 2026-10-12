@@ -17,7 +17,16 @@
         --mute: #5d6b78;
         --line: #cfd8df;
         --typ: #4a6a85;
-        --you: #c8325a;
+        --you: var(--bad);
+        --ok: #1b7f5c;
+        --bad: #c8325a;
+        --brand: #c2410c;
+        --field: #fff;
+        --b1: #f7f1da;
+        --b2: #e8f1f6;
+        --b3: #d9deee;
+        --shade: rgba(23, 33, 43, 0.07);
+        color-scheme: light;
       }
       * {
         box-sizing: border-box;
@@ -55,7 +64,7 @@
         max-width: 58ch;
         font-size: 1.15rem;
       }
-      svg {
+      #chart {
         display: block;
         width: 100%;
         height: auto;
@@ -97,11 +106,6 @@
         border-radius: 50%;
         background: var(--you);
       }
-      .bar {
-        width: 16px;
-        height: 8px;
-        background: var(--you);
-      }
       .inputs {
         display: grid;
         grid-template-columns: 1fr 1.6fr;
@@ -122,7 +126,7 @@
           sans-serif;
         font-variant-numeric: tabular-nums;
         color: var(--ink);
-        background: #fff;
+        background: var(--field);
         border: 1px solid var(--ink);
         border-radius: 4px;
         padding: 6px 10px;
@@ -157,7 +161,7 @@
       }
       .plan li {
         display: grid;
-        grid-template-columns: 6.5rem 1fr;
+        grid-template-columns: 9rem 1fr;
         padding: 8px 0;
         border-bottom: 1px solid var(--line);
       }
@@ -175,28 +179,140 @@
           grid-template-columns: 1fr;
         }
       }
+
+      :root[data-theme="dark"] {
+        --ink: #e8edf2;
+        --page: #10161c;
+        --mute: #9aa8b5;
+        --line: #2b3947;
+        --typ: #7fa3c4;
+        --ok: #4cc38a;
+        --bad: #ff6b8e;
+        --brand: #fb923c;
+        --field: #18212a;
+        --b1: #262418;
+        --b2: #16222b;
+        --b3: #1b2035;
+        --shade: rgba(255, 255, 255, 0.06);
+        color-scheme: dark;
+      }
+      .top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 22px;
+      }
+      .name {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--mute);
+      }
+      .name .brand {
+        color: var(--brand);
+        font-weight: 800;
+        font-size: 1.35rem;
+        letter-spacing: -0.02em;
+      }
+      .logo {
+        width: 22px;
+        height: 22px;
+        fill: var(--brand);
+      }
+      #theme {
+        font:
+          600 0.9rem "Schibsted Grotesk",
+          system-ui,
+          sans-serif;
+        color: var(--ink);
+        background: none;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+      #theme:hover {
+        border-color: var(--ink);
+      }
+      input:focus-visible,
+      button:focus-visible {
+        outline-color: var(--brand);
+      }
+      .planhead {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+      .planhead h2 {
+        margin: 0;
+      }
+      .stop label {
+        font-size: 0.9rem;
+        color: var(--mute);
+        margin: 0 0 2px;
+      }
+      .stop input[type="time"] {
+        width: auto;
+        font-size: 1.15rem;
+        padding: 4px 8px;
+      }
+      .plan li b {
+        font-weight: 800;
+      }
+      .ring {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid var(--typ);
+      }
+      details > summary {
+        cursor: pointer;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
     </style>
   </head>
   <body>
     <main>
-      <p class="name">StepUp - A Step Goal Early-Warning Predictor</p>
+      <header class="top">
+        <p class="name">
+          <svg class="logo" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="2" y="15" width="6" height="6" />
+            <rect x="9" y="9" width="6" height="12" />
+            <rect x="16" y="3" width="6" height="18" />
+          </svg>
+          <span class="brand">StepUp</span
+          ><span>A Step Goal Early-Warning Predictor</span>
+        </p>
+        <button id="theme" type="button">Dark mode</button>
+      </header>
       <h1 id="head">Checking your pace</h1>
       <p class="sub" id="sub">
         Set the time and your steps so far, or drag the dot on the chart.
       </p>
 
-      <svg
-        id="chart"
-        viewBox="0 0 640 330"
-        role="img"
-        aria-label="Steps through the day: the pace for 10,000, where your pace lands you, and suggested walks"
-      ></svg>
-      <ul class="key">
-        <li><i class="ln"></i>The pace for 10,000</li>
-        <li><i class="dash"></i>Where your pace lands you</li>
-        <li><i class="pt"></i>You, now (drag it)</li>
-        <li><i class="bar"></i>Suggested walks</li>
-      </ul>
+      <details open>
+        <summary>
+          The pace chart (drag the dot to try other times and steps)
+        </summary>
+        <svg
+          id="chart"
+          viewBox="0 0 640 330"
+          role="img"
+          aria-label="Steps through the day: the pace for 10,000, where your pace lands you, and where to be in an hour"
+        ></svg>
+        <ul class="key">
+          <li><i class="ln"></i>The pace for 10,000</li>
+          <li><i class="dash"></i>Where your pace lands you</li>
+          <li><i class="pt"></i>You, now (drag it)</li>
+          <li><i class="ring"></i>Where to be in an hour</li>
+        </ul>
+      </details>
 
       <div class="inputs">
         <div>
@@ -222,7 +338,13 @@
       </div>
 
       <section class="plan">
-        <h2>The rest of your day</h2>
+        <div class="planhead">
+          <h2>My advice</h2>
+          <div class="stop">
+            <label for="stop">You stop walking at</label
+            ><input id="stop" type="time" value="18:00" />
+          </div>
+        </div>
         <p id="planmsg"></p>
         <ul id="walks"></ul>
       </section>
@@ -230,8 +352,10 @@
       <p class="note">
         Built from Fitbit data for 30 people in 2016. The chance comes from a
         random forest that sees only the time of day and your steps so far, and
-        the walk plan assumes about 100 steps a minute. A plan improves your
-        odds. It can't guarantee them.
+        the advice assumes about 100 steps a minute, so 10 minutes of walking is
+        about 1,000 steps. The percentages come from asking the model what would
+        happen with that many extra steps. It doesn't know your timetable. A
+        plan improves your odds. It can't guarantee them.
       </p>
     </main>
 
@@ -240,6 +364,7 @@
         GOAL = 10000,
         PACE = 100,
         WALK = 10,
+        TARGET = 0.7,
         T0 = 480,
         T1 = 1290,
         YMAX = 14000;
@@ -277,49 +402,26 @@
         return (v[i] + (v[i + 1] - v[i]) * f) * GOAL;
       }
 
-      function plan(m, s) {
-        const rem = Math.max(GOAL - s, 0);
-        if (!rem)
-          return {
-            msg: "You've already passed 10,000. Nothing more is needed today.",
-            walks: [],
-          };
-        const per = WALK * PACE,
-          n = Math.ceil(rem / per),
-          start = Math.max(m + 10, T0),
-          avail = T1 - start;
-        if (avail < WALK)
-          return { msg: "It's too late for a walk plan today.", walks: [] };
-        if (n * WALK > avail)
-          return {
-            msg: `You need about ${Math.round(rem / PACE)} minutes of walking and only ${avail} minutes are left before 9:30pm. Walk as much as you can.`,
-            walks: [],
-          };
-        const gap = n > 1 ? (avail - WALK) / (n - 1) : 0;
-        return {
-          msg: `${n} short walk${n > 1 ? "s" : ""} of ${WALK} minutes would cover the remaining ${num(rem)} steps.`,
-          walks: Array.from({ length: n }, (_, i) =>
-            Math.round(start + i * gap),
-          ),
-        };
-      }
-
-      function draw(m, s, walks) {
+      function draw(m, s, stop) {
         const band = (a, b, c, name) =>
-          `<rect x="${x(a)}" y="${T}" width="${x(b) - x(a)}" height="${PH}" fill="${c}"/><text x="${x(a) + 8}" y="${T + 17}" font-size="12" fill="#17212b" opacity=".6">${name}</text>`;
+          `<rect x="${x(a)}" y="${T}" width="${x(b) - x(a)}" height="${PH}" style="fill:var(${c})"/><text x="${x(a) + 8}" y="${T + 17}" font-size="12" style="fill:var(--ink);opacity:.6">${name}</text>`;
         let g =
-          band(480, 720, "#f7f1da", "morning") +
-          band(720, 1020, "#e8f1f6", "afternoon") +
-          band(1020, 1290, "#d9deee", "evening");
+          band(480, 720, "--b1", "morning") +
+          band(720, 1020, "--b2", "afternoon") +
+          band(1020, 1290, "--b3", "evening");
+        const e = Math.min(stop, T1);
+        if (e < T1)
+          g += `<rect x="${x(e)}" y="${T}" width="${x(T1) - x(e)}" height="${PH}" style="fill:var(--shade)"/><line x1="${x(e)}" x2="${x(e)}" y1="${T}" y2="${T + PH}" style="stroke:var(--ink)" stroke-width="1" stroke-dasharray="3 3"/><text x="${x(e) + 6}" y="${T + 34}" font-size="12" style="fill:var(--ink);opacity:.6">walks end</text>`;
         [0, 5000, 10000].forEach((v) => {
-          g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="#17212b" stroke-width="${v == GOAL ? 1.5 : 0.5}" stroke-dasharray="${v == GOAL ? "6 4" : ""}"/>`;
-          g += `<text x="${L - 8}" y="${y(v) + 4}" text-anchor="end" font-size="12" fill="#5d6b78">${num(v)}</text>`;
+          const goal = v == GOAL;
+          g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" style="stroke:${goal ? "var(--brand)" : "var(--ink)"}" stroke-width="${goal ? 2 : 0.5}" stroke-dasharray="${goal ? "6 4" : ""}"/>`;
+          g += `<text x="${L - 8}" y="${y(v) + 4}" text-anchor="end" font-size="12" style="fill:${goal ? "var(--brand)" : "var(--mute)"}" font-weight="${goal ? 700 : 400}">${num(v)}</text>`;
         });
         [540, 720, 900, 1080, 1260].forEach(
           (t) =>
-            (g += `<text x="${x(t)}" y="${H - 9}" text-anchor="middle" font-size="12" fill="#5d6b78">${fmt(t).replace(":00", "")}</text>`),
+            (g += `<text x="${x(t)}" y="${H - 9}" text-anchor="middle" font-size="12" style="fill:var(--mute)">${fmt(t).replace(":00", "")}</text>`),
         );
-        g += `<polyline points="${curve.minutes.map((t) => x(t) + "," + y(typ(t))).join(" ")}" fill="none" stroke="#4a6a85" stroke-width="3"/>`;
+        g += `<polyline points="${curve.minutes.map((t) => x(t) + "," + y(typ(t))).join(" ")}" fill="none" style="stroke:var(--typ)" stroke-width="3"/>`;
         const k = typ(m) > 0 ? s / typ(m) : 0;
         if (k && m < T1) {
           const pts = [x(m) + "," + y(s)].concat(
@@ -329,39 +431,110 @@
           );
           g += `<polyline points="${pts.join(" ")}" fill="none" style="stroke:var(--you)" stroke-width="3" stroke-dasharray="1 6" stroke-linecap="round"/>`;
         }
-        walks.forEach(
-          (t) =>
-            (g += `<rect x="${x(t)}" y="${H - B - 9}" width="${x(t + WALK) - x(t)}" height="9" style="fill:var(--you)"/>`),
-        );
-        g += `<circle cx="${x(m)}" cy="${y(s)}" r="8" style="fill:var(--you)" stroke="#fff" stroke-width="2.5"/>`;
+        if (m + 60 <= T1)
+          g += `<circle cx="${x(m + 60)}" cy="${y(typ(m + 60))}" r="5" fill="none" style="stroke:var(--typ)" stroke-width="2"/>`;
+        g += `<circle cx="${x(m)}" cy="${y(s)}" r="8" style="fill:var(--you);stroke:var(--page)" stroke-width="2.5"/>`;
         $("chart").innerHTML = g;
+      }
+
+      async function ask(m, s) {
+        const r = await fetch(API + "/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ minute_of_day: m, steps_so_far: s }),
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || "The API rejected that input");
+        return d;
+      }
+
+      function verdict(s, p) {
+        if (s >= GOAL) return "You've already made it!";
+        if (p >= 0.95) return "You’ll definitely make it.";
+        if (p >= 0.75) return "You'll most probably make it.";
+        if (p >= 0.5) return "You'll probably make it.";
+        if (p >= 0.25) return "You'll probably fall short.";
+        return "You'll most probably fall short.";
+      }
+
+      // probs[k] = the model's chance if you add k extra 10-minute walks (k * 1,000 steps) right now
+      function advice(m, s, stop, probs) {
+        const rem = Math.max(GOAL - s, 0),
+          end = Math.min(stop, T1);
+        if (!rem)
+          return {
+            msg: "You've already passed 10,000. Nothing more is needed today.",
+            lines: [],
+          };
+        if (end - m < WALK)
+          return {
+            msg: `You stop walking at ${fmt(stop)}, which leaves no time for a walk. Move it later if you want advice.`,
+            lines: [],
+          };
+        const lines = [],
+          t = m + 60;
+        if (t <= T1)
+          lines.push([
+            "Stay on pace",
+            `Aim for about ${num(Math.round(typ(t) / 100) * 100)} steps by ${fmt(t)}.`,
+          ]);
+        if (probs[0] >= TARGET)
+          return {
+            msg: "You're on track. Keep your usual rhythm and you shouldn't need any extra walks.",
+            lines,
+          };
+        let k = probs.findIndex((p) => p >= TARGET); // fewest extra walks that reach the target chance
+        if (k < 0) k = probs.length - 1;
+        const mins = k * WALK,
+          pct = (p) => Math.round(p * 100),
+          opts = [`one ${mins}-minute walk`];
+        if (k > 1) opts.push(`${k} walks of ${WALK} minutes`);
+        opts.push(`${2 * k} walks of ${WALK / 2} minutes`);
+        const ways =
+          opts.slice(0, -1).join(", ") +
+          (opts.length > 2 ? "," : "") +
+          " or " +
+          opts[opts.length - 1];
+        lines.unshift([
+          "Ways to do it",
+          ways.charAt(0).toUpperCase() + ways.slice(1) + ".",
+        ]);
+        if (mins > end - m)
+          lines.push([
+            "Heads up",
+            `That's more than the ${end - m} minutes you have before you stop walking, so start as soon as you can.`,
+          ]);
+        return {
+          msg: `About ${mins} more minutes of walking would lift your chance from ${pct(probs[0])}% to ${pct(probs[k])}%.`,
+          lines,
+        };
       }
 
       async function update() {
         if (!curve) return;
         const [h, mi] = ($("time").value || "12:00").split(":").map(Number),
           m = h * 60 + mi,
-          s = Math.max(0, +$("steps").value || 0);
+          s = Math.max(0, +$("steps").value || 0),
+          [sh, sm] = ($("stop").value || "18:00").split(":").map(Number),
+          stop = sh * 60 + sm,
+          per = WALK * PACE;
         $("slider").value = Math.min(s, YMAX);
-        const pl = plan(m, s);
-        $("planmsg").textContent = pl.msg;
-        $("walks").innerHTML = pl.walks
-          .map(
-            (t) =>
-              `<li><time>${fmt(t)}</time><span>Walk for ${WALK} minutes, about ${num(WALK * PACE)} steps</span></li>`,
-          )
-          .join("");
+        let adv = { msg: "", lines: [] };
         try {
-          const r = await fetch(API + "/predict", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ minute_of_day: m, steps_so_far: s }),
-          });
-          const d = await r.json();
-          if (!r.ok) throw new Error(d.error || "The API rejected that input");
+          const K = Math.min(Math.ceil(Math.max(GOAL - s, 0) / per), 10);
+          const results = await Promise.all(
+            Array.from({ length: K + 1 }, (_, k) => ask(m, s + k * per)),
+          );
+          const d = results[0];
+          adv = advice(
+            m,
+            s,
+            stop,
+            results.map((r) => r.probability),
+          );
           document.documentElement.style.setProperty(
             "--you",
-            d.will_reach ? "#1b7f5c" : "#c8325a",
+            d.will_reach ? "var(--ok)" : "var(--bad)",
           );
           const gap = Math.round(typ(m) - s);
           $("head").textContent =
@@ -371,10 +544,10 @@
                 ? `You're ${num(-gap)} steps ahead of the pace for 10,000.`
                 : "You're exactly on the pace for 10,000.";
           $("sub").textContent =
-            `At ${fmt(m)} with ${num(s)} steps, I'd put your chance of reaching 10,000 at ${Math.round(d.probability * 100)}%. ` +
-            (d.will_reach
-              ? "You'll probably make it."
-              : "You'll probably fall short.") +
+            (s >= GOAL
+              ? ""
+              : `At ${fmt(m)} with ${num(s)} steps, I'd put your chance of reaching 10,000 at ${Math.round(d.probability * 100)}%. `) +
+            verdict(s, d.probability) +
             (d.in_trained_range
               ? ""
               : " The model only knows 8:00am to 9:30pm, so treat this as a rough guess.");
@@ -383,7 +556,11 @@
           $("sub").textContent =
             `Start app.py and check that the address is ${API}. (${e.message})`;
         }
-        draw(m, s, pl.walks);
+        $("planmsg").textContent = adv.msg;
+        $("walks").innerHTML = adv.lines
+          .map(([a, b]) => `<li><b>${a}</b><span>${b}</span></li>`)
+          .join("");
+        draw(m, s, stop);
       }
       const later = () => {
         clearTimeout(timer);
@@ -419,10 +596,33 @@
       svg.addEventListener("pointerup", () => (drag = false));
       $("time").addEventListener("input", later);
       $("steps").addEventListener("input", later);
+      $("stop").addEventListener("input", later);
       $("slider").addEventListener("input", (e) => {
         $("steps").value = e.target.value;
         later();
       });
+
+      const root = document.documentElement;
+      function setTheme(t) {
+        root.dataset.theme = t;
+        $("theme").textContent = t === "dark" ? "Light mode" : "Dark mode";
+        try {
+          localStorage.setItem("theme", t);
+        } catch (e) {}
+      }
+      let saved = null;
+      try {
+        saved = localStorage.getItem("theme");
+      } catch (e) {}
+      setTheme(
+        saved ||
+          (matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light"),
+      );
+      $("theme").addEventListener("click", () =>
+        setTheme(root.dataset.theme === "dark" ? "light" : "dark"),
+      );
 
       (async () => {
         try {
