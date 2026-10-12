@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The halfway problem</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#17212b;--page:#f4f7f9;--mute:#5d6b78;--line:#cfd8df;--typ:#4a6a85;--you:#c8325a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font:400 1.0625rem/1.55 "Schibsted Grotesk",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+main{max-width:900px;margin:0 auto;padding:36px 20px 64px}
+.name{margin:0 0 22px;font-weight:600;color:var(--mute)}
+h1{font-weight:800;font-size:clamp(1.9rem,5.4vw,3.1rem);line-height:1.08;letter-spacing:-.025em;margin:0 0 10px;max-width:22ch}
+.sub{margin:0 0 24px;max-width:58ch;font-size:1.15rem}
+svg{display:block;width:100%;height:auto;touch-action:none;cursor:crosshair;border-bottom:2px solid var(--ink)}
+.key{display:flex;flex-wrap:wrap;gap:6px 22px;list-style:none;margin:12px 0 0;padding:0;font-size:.9rem;color:var(--mute)}
+.key li{display:flex;align-items:center;gap:8px}
+.key i{display:inline-block}
+.ln{width:22px;height:3px;background:var(--typ)}
+.dash{width:22px;height:0;border-top:3px dotted var(--you)}
+.pt{width:12px;height:12px;border-radius:50%;background:var(--you)}
+.bar{width:16px;height:8px;background:var(--you)}
+.inputs{display:grid;grid-template-columns:1fr 1.6fr;gap:28px;margin:30px 0 0}
+label{display:block;font-weight:600;margin-bottom:4px}
+input[type=time],input[type=number]{width:100%;font:600 1.7rem "Schibsted Grotesk",system-ui,sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);background:#fff;border:1px solid var(--ink);border-radius:4px;padding:6px 10px}
+input[type=range]{width:100%;margin-top:12px;accent-color:var(--you)}
+input:focus-visible{outline:3px solid var(--typ);outline-offset:2px}
+.plan{margin-top:34px;padding-top:16px;border-top:2px solid var(--ink)}
+.plan h2{margin:0 0 6px;font-size:1.35rem;letter-spacing:-.01em}
+.plan p{margin:0;max-width:60ch}
+.plan ul{list-style:none;margin:12px 0 0;padding:0}
+.plan li{display:grid;grid-template-columns:6.5rem 1fr;padding:8px 0;border-bottom:1px solid var(--line)}
+.plan time{font-weight:800}
+.note{margin-top:30px;max-width:64ch;font-size:.9rem;color:var(--mute)}
+@media(max-width:640px){.inputs{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+  <p class="name">The halfway problem</p>
+  <h1 id="head">Checking your pace</h1>
+  <p class="sub" id="sub">Set the time and your steps so far, or drag the dot on the chart.</p>
+
+  <svg id="chart" viewBox="0 0 640 330" role="img" aria-label="Steps through the day: the pace for 10,000, where your pace lands you, and suggested walks"></svg>
+  <ul class="key">
+    <li><i class="ln"></i>The pace for 10,000</li>
+    <li><i class="dash"></i>Where your pace lands you</li>
+    <li><i class="pt"></i>You, now (drag it)</li>
+    <li><i class="bar"></i>Suggested walks</li>
+  </ul>
+
+  <div class="inputs">
+    <div><label for="time">Time now</label><input id="time" type="time"></div>
+    <div><label for="steps">Steps so far today</label><input id="steps" type="number" min="0" max="40000" step="100"><input id="slider" type="range" min="0" max="14000" step="100" aria-label="Steps so far"></div>
+  </div>
+
+  <section class="plan">
+    <h2>The rest of your day</h2>
+    <p id="planmsg"></p>
+    <ul id="walks"></ul>
+  </section>
+
+  <p class="note">Built from Fitbit data for 30 people in 2016. The chance comes from a random forest that sees only the time of day and your steps so far, and the walk plan assumes about 100 steps a minute. A plan improves your odds. It can't guarantee them.</p>
+</main>
+
+<script>
+const API="http://127.0.0.1:5000",GOAL=10000,PACE=100,WALK=10,T0=480,T1=1290,YMAX=14000;
+const W=640,H=330,L=54,R=12,T=12,B=30,PW=W-L-R,PH=H-T-B;
+const $=id=>document.getElementById(id),pad=n=>String(n).padStart(2,"0");
+let curve=null,timer,drag=false;
+const fmt=m=>{const h=Math.floor(m/60);return `${(h+11)%12+1}:${pad(m%60)}${h<12?"am":"pm"}`};
+const x=t=>L+(Math.min(Math.max(t,T0),T1)-T0)/(T1-T0)*PW;
+const y=v=>T+(1-Math.min(v,YMAX)/YMAX)*PH;
+const num=n=>Math.round(n).toLocaleString();
+
+// typical steps at minute m on a day that ends at GOAL (interpolated from the saved curve)
+function typ(m){
+  const p=curve.minutes,v=curve.progress,n=p.length;
+  if(m<=p[0])return v[0]*GOAL;
+  if(m>=p[n-1])return v[n-1]*GOAL;
+  const i=Math.floor((m-p[0])/30),f=(m-p[i])/(p[i+1]-p[i]);
+  return (v[i]+(v[i+1]-v[i])*f)*GOAL;
+}
+
+function plan(m,s){
+  const rem=Math.max(GOAL-s,0);
+  if(!rem)return{msg:"You've already passed 10,000. Nothing more is needed today.",walks:[]};
+  const per=WALK*PACE,n=Math.ceil(rem/per),start=Math.max(m+10,T0),avail=T1-start;
+  if(avail<WALK)return{msg:"It's too late for a walk plan today.",walks:[]};
+  if(n*WALK>avail)return{msg:`You need about ${Math.round(rem/PACE)} minutes of walking and only ${avail} minutes are left before 9:30pm. Walk as much as you can.`,walks:[]};
+  const gap=n>1?(avail-WALK)/(n-1):0;
+  return{msg:`${n} short walk${n>1?"s":""} of ${WALK} minutes would cover the remaining ${num(rem)} steps.`,
+         walks:Array.from({length:n},(_,i)=>Math.round(start+i*gap))};
+}
+
+function draw(m,s,walks){
+  const band=(a,b,c,name)=>`<rect x="${x(a)}" y="${T}" width="${x(b)-x(a)}" height="${PH}" fill="${c}"/><text x="${x(a)+8}" y="${T+17}" font-size="12" fill="#17212b" opacity=".6">${name}</text>`;
+  let g=band(480,720,"#f7f1da","morning")+band(720,1020,"#e8f1f6","afternoon")+band(1020,1290,"#d9deee","evening");
+  [0,5000,10000].forEach(v=>{
+    g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#17212b" stroke-width="${v==GOAL?1.5:.5}" stroke-dasharray="${v==GOAL?"6 4":""}"/>`;
+    g+=`<text x="${L-8}" y="${y(v)+4}" text-anchor="end" font-size="12" fill="#5d6b78">${num(v)}</text>`;
+  });
+  [540,720,900,1080,1260].forEach(t=>g+=`<text x="${x(t)}" y="${H-9}" text-anchor="middle" font-size="12" fill="#5d6b78">${fmt(t).replace(":00","")}</text>`);
+  g+=`<polyline points="${curve.minutes.map(t=>x(t)+","+y(typ(t))).join(" ")}" fill="none" stroke="#4a6a85" stroke-width="3"/>`;
+  const k=typ(m)>0?s/typ(m):0;
+  if(k&&m<T1){
+    const pts=[x(m)+","+y(s)].concat(curve.minutes.filter(t=>t>m).map(t=>x(t)+","+y(typ(t)*k)));
+    g+=`<polyline points="${pts.join(" ")}" fill="none" style="stroke:var(--you)" stroke-width="3" stroke-dasharray="1 6" stroke-linecap="round"/>`;
+  }
+  walks.forEach(t=>g+=`<rect x="${x(t)}" y="${H-B-9}" width="${x(t+WALK)-x(t)}" height="9" style="fill:var(--you)"/>`);
+  g+=`<circle cx="${x(m)}" cy="${y(s)}" r="8" style="fill:var(--you)" stroke="#fff" stroke-width="2.5"/>`;
+  $("chart").innerHTML=g;
+}
+
+async function update(){
+  if(!curve)return;
+  const [h,mi]=($("time").value||"12:00").split(":").map(Number),m=h*60+mi,s=Math.max(0,+$("steps").value||0);
+  $("slider").value=Math.min(s,YMAX);
+  const pl=plan(m,s);
+  $("planmsg").textContent=pl.msg;
+  $("walks").innerHTML=pl.walks.map(t=>`<li><time>${fmt(t)}</time><span>Walk for ${WALK} minutes, about ${num(WALK*PACE)} steps</span></li>`).join("");
+  try{
+    const r=await fetch(API+"/predict",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({minute_of_day:m,steps_so_far:s})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||"The API rejected that input");
+    document.documentElement.style.setProperty("--you",d.will_reach?"#1b7f5c":"#c8325a");
+    const gap=Math.round(typ(m)-s);
+    $("head").textContent=gap>0?`You're ${num(gap)} steps behind the pace for 10,000.`:gap<0?`You're ${num(-gap)} steps ahead of the pace for 10,000.`:"You're exactly on the pace for 10,000.";
+    $("sub").textContent=`At ${fmt(m)} with ${num(s)} steps, I'd put your chance of reaching 10,000 at ${Math.round(d.probability*100)}%. `+(d.will_reach?"You'll probably make it.":"You'll probably fall short.")+(d.in_trained_range?"":" The model only knows 8:00am to 9:30pm, so treat this as a rough guess.");
+  }catch(e){
+    $("head").textContent="Can't reach the prediction API.";
+    $("sub").textContent=`Start app.py and check that the address is ${API}. (${e.message})`;
+  }
+  draw(m,s,pl.walks);
+}
+const later=()=>{clearTimeout(timer);timer=setTimeout(update,150)};
+
+function moveDot(e){
+  const svg=$("chart"),r=svg.getBoundingClientRect();
+  const px=(e.clientX-r.left)/r.width*W,py=(e.clientY-r.top)/r.height*H;
+  const m=Math.min(T1,Math.max(T0,Math.round((T0+(px-L)/PW*(T1-T0))/5)*5));
+  const s=Math.round(Math.max(0,Math.min(YMAX,(1-(py-T)/PH)*YMAX))/100)*100;
+  $("time").value=pad(Math.floor(m/60))+":"+pad(m%60);
+  $("steps").value=s;
+  later();
+}
+const svg=$("chart");
+svg.addEventListener("pointerdown",e=>{drag=true;svg.setPointerCapture(e.pointerId);moveDot(e)});
+svg.addEventListener("pointermove",e=>{if(drag)moveDot(e)});
+svg.addEventListener("pointerup",()=>drag=false);
+$("time").addEventListener("input",later);
+$("steps").addEventListener("input",later);
+$("slider").addEventListener("input",e=>{$("steps").value=e.target.value;later()});
+
+(async()=>{
+  try{curve=await (await fetch(API+"/curve")).json()}
+  catch(e){$("head").textContent="Can't reach the prediction API.";$("sub").textContent=`Start app.py and check that the address is ${API}.`;return}
+  const n=new Date();
+  $("time").value=pad(n.getHours())+":"+pad(n.getMinutes());
+  $("steps").value=3000;
+  update();
+})();
+</script>
+</body>
+</html>
