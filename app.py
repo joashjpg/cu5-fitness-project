@@ -1,7 +1,7 @@
 import json
 import joblib
 import pandas as pd
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -14,6 +14,9 @@ with open("models/progress_curve.json") as f:
 GOAL = 10000
 CHECKPOINTS = sorted(progress_curve)
 
+@app.route("/")
+def index():
+    return send_from_directory(app.root_path, "index.html")
 
 @app.route("/predict", methods=["POST"])
 def predict():

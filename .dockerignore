@@ -1,5 +1,9 @@
 data/
 *.ipynb
+*.pdf
 .git
+.gitignore
+.ipynb_checkpoints
 __pycache__
 .venv
+.vercelignore
