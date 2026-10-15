@@ -1,0 +1,5 @@
+data/
+*.ipynb
+.git
+__pycache__
+.venv

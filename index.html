@@ -360,7 +360,10 @@
     </main>
 
     <script>
-      const API = "http://127.0.0.1:5000",
+      const API =
+          location.protocol === "file:" || location.hostname === "localhost"
+            ? "http://127.0.0.1:5000"
+            : "",
         GOAL = 10000,
         PACE = 100,
         WALK = 10,

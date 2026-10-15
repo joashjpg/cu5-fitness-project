@@ -1,0 +1,5 @@
+data/
+*.ipynb
+Dockerfile
+.dockerignore
+README.md
